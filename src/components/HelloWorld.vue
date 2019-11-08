@@ -1,58 +1,72 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+  <div class="main">
+    <nav>
+      <ul class="nav-list" ref="listItem">
+        <li v-for="(nav,index) in navs" :key="index" @mouseenter="setCurrentNav(index)">{{nav.name}}</li>
+      </ul>
+    </nav>
+    <div class="nav-underline" :style="navUnderlineStyle"></div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
+  name: "articallist",
+  data() {
+    return {
+      currentNav: "",
+      currentNavStyle: {},
+      navs: [
+        { name: "1" },
+        { name: "Gardelli" },
+        { name: "geisha" },
+        { name: "v60" },
+        { name: "visual studio code" }
+      ]
+    };
+  },
+  methods: {
+    setCurrentNav(index) {
+      this.currentNav = index;
+      this.currentNavStyle = this.getNavStyle(index);
+    },
+    getNavStyle(index) {
+      let childNodes = this.$refs.listItem.childNodes;
+      let width = childNodes[index].clientWidth;
+      let left = 0;
+      if (index > 0) {
+        for (let i = 0; i < index; i++) {
+          left += childNodes[i].clientWidth;
+        }
+      }
+      return { width, left };
+    }
+  },
+  computed: {
+    navUnderlineStyle() {
+      let style = this.currentNavStyle;
+      return {
+        width: `${style.width}px`,
+        left: `${style.left}px`
+      };
+    }
   }
-}
+};
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
+.main .nav-list li {
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+  float: left;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
+
+.nav-underline {
+  position: absolute;
+  bottom: 0;
+  display: block;
+  height: 2px;
+  background-color: red;
+  transition: all 0.2s ease-out;
 }
 </style>
