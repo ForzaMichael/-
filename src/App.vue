@@ -59,7 +59,6 @@ export default {
   computed: {
     navUnderlineStyle() {
       let style = this.currentNavStyle || this.activeNavStyle;
-      console.log(`${style.width}px`);
       return {
         width: `${style.width}px`,
         left: `${style.left}px`
