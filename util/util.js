@@ -6,5 +6,6 @@ export function isValidClick(clickpointed, redPacketObj) {
   const distanceY = clickpointed.y - redPacketObj.y;
   const validX = distanceX > 0 && distanceX < redPacketObj.radius;
   const validY = distanceY > 0 && distanceY < redPacketObj.radius * 1.5; //纵向1.5倍radius
+  console.log(validX && validY);
   return validX && validY;
 }

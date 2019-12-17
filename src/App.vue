@@ -3,20 +3,20 @@
     <div class="score">{{ clickedRedPacket }},剩余{{ endCount }}s</div>
     <div class="canvasWrap" ref="canvasArea">
       <canvas id="canvas" @click="clickHandler"></canvas>
-      <img id='canvas_bg' src="../assets/bj.jpg" alt="">
+      <img id="canvas_bg" src="../assets/bj.jpg" alt="" />
     </div>
     <button class="startGameBtn" @click="startRain">startGame</button>
   </div>
 </template>
 <script>
 import { randomRound, isValidClick } from "../util/util";
-const redPacket = {
-  x: "x轴位置",
-  y: "y轴位置",
-  radius: "红包大小",
-  img: "缓存好的红包图片",
-  speed: "红包的下落速度"
-};
+// const redPacket = {
+//   x: "x轴位置",
+//   y: "y轴位置",
+//   radius: "红包大小",
+//   img: "缓存好的红包图片",
+//   speed: "红包的下落速度"
+// };
 export default {
   data() {
     return {
@@ -85,7 +85,7 @@ export default {
     resizeCanvas() {
       this.innerHeight = window.screen.height;
       this.innerWidth = window.screen.width;
-      let image = document.querySelector('#canvas_bg');
+      let image = document.querySelector("#canvas_bg");
       image.height = this.innerHeight;
       image.width = this.innerWidth;
       document.getElementById("canvas").setAttribute("width", this.innerWidth);
@@ -120,7 +120,8 @@ export default {
     //生成红包
     pushRedPackets() {
       // 每次随机生成1~3个红包
-      const random = randomRound(1, 3);
+      // const random = randomRound(1, 3);
+      const random = 1;
       let arr = [];
       for (let i = 0; i < random; i++) {
         // 创建新的红包对象
@@ -129,7 +130,10 @@ export default {
           y: -Math.random() * 150, // -150内高度 随机
           radius: randomRound(this.innerWidth * 0.05, this.innerWidth * 0.1), // 红包宽度
           img: this.imgArr[randomRound(0, this.imgArr.length - 1)].img, // 随机取一个红包图片对象
-          speed: randomRound(this.innerHeight * 0.0075, this.innerHeight * 0.0125)
+          speed: randomRound(
+            this.innerHeight * 0.0075,
+            this.innerHeight * 0.0125
+          )
         };
         // console.log(newRedPacket);
         arr.push(newRedPacket);
@@ -166,6 +170,9 @@ export default {
         };
         // 替换掉原来的它
         this.redPacketArr.splice(index, 1, newRedPacket);
+        if (this.redPacketArr[index].y > this.innerHeight + 500) {
+          this.redPacketArr.splice(index, 1);
+        }
         this.ctx.drawImage(
           redPacket.img,
           redPacket.x,
@@ -187,7 +194,9 @@ export default {
           this.clickedRedPacket++;
         }
       });
-      this.redPacketArr.splice(clickedRedPacket[0], 1);
+      if (clickedRedPacket.length) {
+        this.redPacketArr.splice(clickedRedPacket[0], 1);
+      }
     }
   }
 };
@@ -204,7 +213,7 @@ export default {
 .canvasWrap img {
   position: absolute;
   top: 0;
-  left:0;
+  left: 0;
 }
 #canvas {
   position: absolute;
