@@ -1,13 +1,14 @@
 <template>
   <div class="wrap">
     <div v-if="disBg" class="wrap_bg">
-      <div v-if="!start" class="text">{{timerNum}}</div>
+      <div v-if="!start" class="text">{{ timerNum }}</div>
       <button v-if="start" @click="startGame">开始游戏</button>
     </div>
 
-    <div class="score">{{ clickedRedPacket }},剩余{{ endCount }}s</div>
+    <div class="score">{{ clickedCount }},剩余{{ endCount }}s</div>
     <div class="canvasWrap" ref="canvasArea">
-      <canvas id="canvas" @click="clickHandler"></canvas>
+      <canvas class="canvas" id="canvas" @click="clickHandler"></canvas>
+      <canvas class="canvas bubbleCanvas" id="bubbleCanvas"></canvas>
       <img id="canvas_bg" src="../assets/bj.jpg" alt="" />
     </div>
     <!-- <button class="startGameBtn" @click="startRain">startGame</button> -->
@@ -29,11 +30,13 @@ export default {
       innerWidth: "",
       timer: null,
       canvas: "",
-      clickedRedPacket: 0,
+      bubbleCanvas: "",
+      clickedCount: 0,
       endCount: 15,
       start: true,
       disBg: true,
-      timerNum:5,
+      timerNum: 5,
+      bubbleArr: [],
       imgArr: [
         {
           img:
@@ -52,7 +55,14 @@ export default {
             "http://img.yipic.cn/thumb/5200ceba/f292f2e2/e03bb2a8/340f3687/effect_small_5200cebaf292f2e2e03bb2a8340f3687.png?x-oss-process=image/format,webp/sharpen,100"
         }
       ],
+      bubbleImage: [
+        {
+          img:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvPIpjkiRHJkwI7Laeyg9ZWnWm2MwV_jlgSGJWEkd7DIEZ18fZ&s"
+        }
+      ],
       ctx: "",
+      bubbleCtx: "",
       redPacketArr: []
     };
   },
@@ -60,25 +70,26 @@ export default {
     this.initCanvas();
   },
   methods: {
-    startGame(){
+    startGame() {
       this.start = !this.start;
-      this.startTimer = setInterval(()=>{
+      this.startTimer = setInterval(() => {
         this.timerNum--;
-        if(this.timerNum === 0){
-          this.timerNum ='Go'
+        if (this.timerNum === 0) {
+          this.timerNum = "Go!";
         }
-      }, 1000)
-      this.startGamer = setTimeout(()=>{
+      }, 1000);
+      this.startGamer = setTimeout(() => {
         clearTimeout(this.startTimer);
         this.timerNum = 5;
         this.disBg = !this.disBg;
         this.start = !this.start;
         this.startRain();
-      },6000)
+      }, 6000);
     },
     startRain() {
       this.pushRedPackets(); // 不断增加红包
       this.moveRedPackets(); // 红包开始运动
+      this.moveBubble(); //气泡开始
       this.endCountTimer = setInterval(() => {
         this.endCount--;
       }, 1000);
@@ -87,14 +98,18 @@ export default {
         clearTimeout(this.endCountTimer);
         clearTimeout(this.addredPacketsTimer);
         window.cancelAnimationFrame(this.moveRedPacketAnimation);
+        window.cancelAnimationFrame(this.moveBubbleAnimation);
         this.disBg = !this.disBg;
       }, 15000);
     },
     initCanvas() {
       this.canvas = document.getElementById("canvas");
-      if (this.canvas.getContext) {
+      this.bubbleCanvas = document.getElementById("bubbleCanvas");
+      if (this.canvas.getContext && this.bubbleCanvas.getContext) {
         this.ctx = this.canvas.getContext("2d");
+        this.bubbleCtx = this.bubbleCanvas.getContext("2d");
         this.loadImgs(this.imgArr);
+        this.loadImgs(this.bubbleImage);
       }
       this.resizeCanvas();
     },
@@ -107,6 +122,12 @@ export default {
       document.getElementById("canvas").setAttribute("width", this.innerWidth);
       document
         .getElementById("canvas")
+        .setAttribute("height", this.innerHeight);
+      document
+        .getElementById("bubbleCanvas")
+        .setAttribute("width", this.innerWidth);
+      document
+        .getElementById("bubbleCanvas")
         .setAttribute("height", this.innerHeight);
     },
     loadImgs(arr) {
@@ -207,13 +228,55 @@ export default {
       //循环检查点击点是否在任意redPacketArr范围内
       this.redPacketArr.forEach((redPacket, index) => {
         if (isValidClick(clickedPoint, redPacket)) {
-          clickedRedPacket.push(index);
-          this.clickedRedPacket++;
+          clickedRedPacket.push({
+            index,
+            x: clickedPoint.x,
+            y: clickedPoint.y
+          });
         }
       });
-      if (clickedRedPacket.length) {
-        this.redPacketArr.splice(clickedRedPacket[0], 1);
+      if (clickedRedPacket.length > 0) {
+        this.clickedCount++;
+        const bubble = {
+          x: clickedRedPacket[0].x,
+          y: clickedRedPacket[0].y,
+          opacity: 1
+        };
+        this.bubbleArr.push(bubble);
+        this.redPacketArr.splice(clickedRedPacket[0].index, 1);
       }
+    },
+    drawBubble() {
+      this.bubbleArr.forEach((bubble, index) => {
+        if (bubble.opacity > 0) {
+          // 透明度渐变
+          this.bubbleCtx.globalAlpha = bubble.opacity;
+          this.bubbleCtx.drawImage(
+            this.bubbleImage[0].img,
+            bubble.x,
+            bubble.y,
+            this.innerWidth * 0.05,
+            this.innerWidth * 0.05
+          );
+          const newBubble = {
+            x: bubble.x + 0.2,
+            y: bubble.y - 0.3,
+            opacity: bubble.opacity - 0.01
+          };
+          this.bubbleArr.splice(index, 1, newBubble);
+        }
+      });
+    },
+    moveBubble() {
+      this.bubbleCtx.clearRect(0, 0, this.innerWidth, this.innerHeight);
+      // 把opacity为0的全部清除
+      this.bubbleArr.forEach((bubble, index) => {
+        if (bubble.opacity < 0) {
+          this.bubbleArr.splice(index, 1);
+        }
+      });
+      this.drawBubble();
+      this.moveBubbleAnimation = window.requestAnimationFrame(this.moveBubble);
     }
   }
 };
@@ -223,7 +286,7 @@ export default {
   width: 100%;
   height: 100%;
 }
-.wrap_bg{
+.wrap_bg {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -244,7 +307,7 @@ export default {
   animation: scaleSize 1s linear infinite;
 }
 @keyframes scaleSize {
-  0%{
+  0% {
     transform: scale(1.5);
   }
   100% {
@@ -255,7 +318,7 @@ export default {
   position: absolute;
   top: 50%;
   left: 50%;
-} 
+}
 .canvasWrap {
   width: 100%;
   height: 100%;
@@ -265,11 +328,15 @@ export default {
   top: 0;
   left: 0;
 }
-#canvas {
+.canvas {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 10;
+}
+.canvas.bubbleCanvas {
+  z-index: 11;
+  pointer-events: none;
 }
 .startGameBtn {
   position: fixed;
