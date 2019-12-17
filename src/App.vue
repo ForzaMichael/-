@@ -1,13 +1,14 @@
 <template>
   <div class="wrap">
-    <div class="score">得分：0</div>
+    <div class="score">{{ clickedRedPacket }},剩余{{ endCount }}s</div>
     <div class="canvasWrap" ref="canvasArea">
-      <canvas id="canvas"></canvas>
+      <canvas id="canvas" @click="clickHandler"></canvas>
     </div>
     <button class="startGameBtn" @click="startRain">startGame</button>
   </div>
 </template>
 <script>
+import { randomRound, isValidClick } from "../util/util";
 const redPacket = {
   x: "x轴位置",
   y: "y轴位置",
@@ -22,6 +23,8 @@ export default {
       innerWidth: "",
       timer: null,
       canvas: "",
+      clickedRedPacket: 0,
+      endCount: 15,
       imgArr: [
         {
           img:
@@ -61,10 +64,13 @@ export default {
     startRain() {
       this.pushRedPackets(); // 不断增加红包
       this.moveRedPackets(); // 红包开始运动
-      // 开始10秒倒计时
-      this.runCountdownTimer = setInterval(() => {
-        //倒计时15s后，停止动画
-        window.clearTimeout(this.addredPacketsTimer);
+      this.endCountTimer = setInterval(() => {
+        this.endCount--;
+      }, 1000);
+      // //倒计时15s后，停止动画
+      this.runCountdownTimer = setTimeout(() => {
+        clearTimeout(this.endCountTimer);
+        clearTimeout(this.addredPacketsTimer);
         window.cancelAnimationFrame(this.moveRedPacketAnimation);
       }, 15000);
     },
@@ -110,22 +116,16 @@ export default {
     //生成红包
     pushRedPackets() {
       // 每次随机生成1~3个红包
-      const random = this.randomRound(1, 3);
+      const random = randomRound(1, 3);
       let arr = [];
       for (let i = 0; i < random; i++) {
         // 创建新的红包对象
         const newRedPacket = {
-          x: this.randomRound(5, this.innerWidth - 5), // 横向随机  红包不要贴近边边
+          x: randomRound(10, this.innerWidth - 10), // 横向随机  红包不要贴近边
           y: -Math.random() * 150, // -150内高度 随机
-          radius: this.randomRound(
-            this.innerWidth * 0.05,
-            this.innerWidth * 0.1
-          ), // 红包宽度
-          img: this.imgArr[this.randomRound(0, this.imgArr.length - 1)].img, // 随机取一个红包图片对象
-          speed: this.randomRound(
-            this.innerHeight * 0.01,
-            this.innerHeight * 0.02
-          )
+          radius: randomRound(this.innerWidth * 0.05, this.innerWidth * 0.1), // 红包宽度
+          img: this.imgArr[randomRound(0, this.imgArr.length - 1)].img, // 随机取一个红包图片对象
+          speed: randomRound(this.innerHeight * 0.01, this.innerHeight * 0.02)
         };
         // console.log(newRedPacket);
         arr.push(newRedPacket);
@@ -171,8 +171,19 @@ export default {
         );
       });
     },
-    randomRound(start, end) {
-      return Math.round(Math.random() * (end - start) + start);
+    clickHandler(e) {
+      // console.log(e.clientX, e.clientY);
+      //点击坐标
+      let clickedPoint = { x: e.clientX, y: e.clientY };
+      let clickedRedPacket = [];
+      //循环检查点击点是否在任意redPacketArr范围内
+      this.redPacketArr.forEach((redPacket, index) => {
+        if (isValidClick(clickedPoint, redPacket)) {
+          clickedRedPacket.push(index);
+          this.clickedRedPacket++;
+        }
+      });
+      this.redPacketArr.splice(clickedRedPacket[0], 1);
     }
   }
 };
