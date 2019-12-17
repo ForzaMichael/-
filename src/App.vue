@@ -50,16 +50,6 @@ export default {
   },
   mounted() {
     this.initCanvas();
-    this.resizeCanvas();
-    this.$nextTick().then(() => {
-      let that = this;
-      window.onresize = function() {
-        window.clearTimeout(this.timer);
-        this.timer = window.setTimeout(() => {
-          that.resizeCanvas();
-        }, 100);
-      };
-    });
   },
   methods: {
     startRain() {
@@ -81,6 +71,7 @@ export default {
         this.ctx = this.canvas.getContext("2d");
         this.loadImgs(this.imgArr);
       }
+      this.resizeCanvas();
     },
     resizeCanvas() {
       this.innerHeight = window.screen.height;
@@ -107,7 +98,7 @@ export default {
             arr.splice(i, 1, {
               img: image
             });
-            // 这里说明 整个图片数组arr里面的图片全都加载好了
+            // 整个图片数组arr里面的图片全都加载好了
             if (count == len) {
               this.preloaded = true;
               resolve();
@@ -170,6 +161,7 @@ export default {
         };
         // 替换掉原来的它
         this.redPacketArr.splice(index, 1, newRedPacket);
+        //删除离屏红包对象
         if (this.redPacketArr[index].y > this.innerHeight + 500) {
           this.redPacketArr.splice(index, 1);
         }
