@@ -1,11 +1,16 @@
 <template>
   <div class="wrap">
+    <div v-if="disBg" class="wrap_bg">
+      <div v-if="!start" class="text">{{timerNum}}</div>
+      <button v-if="start" @click="startGame">开始游戏</button>
+    </div>
+
     <div class="score">{{ clickedRedPacket }},剩余{{ endCount }}s</div>
     <div class="canvasWrap" ref="canvasArea">
       <canvas id="canvas" @click="clickHandler"></canvas>
       <img id="canvas_bg" src="../assets/bj.jpg" alt="" />
     </div>
-    <button class="startGameBtn" @click="startRain">startGame</button>
+    <!-- <button class="startGameBtn" @click="startRain">startGame</button> -->
   </div>
 </template>
 <script>
@@ -26,6 +31,9 @@ export default {
       canvas: "",
       clickedRedPacket: 0,
       endCount: 15,
+      start: true,
+      disBg: true,
+      timerNum:5,
       imgArr: [
         {
           img:
@@ -52,6 +60,22 @@ export default {
     this.initCanvas();
   },
   methods: {
+    startGame(){
+      this.start = !this.start;
+      this.startTimer = setInterval(()=>{
+        this.timerNum--;
+        if(this.timerNum === 0){
+          this.timerNum ='Go'
+        }
+      }, 1000)
+      this.startGamer = setTimeout(()=>{
+        clearTimeout(this.startTimer);
+        this.timerNum = 5;
+        this.disBg = !this.disBg;
+        this.start = !this.start;
+        this.startRain();
+      },6000)
+    },
     startRain() {
       this.pushRedPackets(); // 不断增加红包
       this.moveRedPackets(); // 红包开始运动
@@ -63,6 +87,7 @@ export default {
         clearTimeout(this.endCountTimer);
         clearTimeout(this.addredPacketsTimer);
         window.cancelAnimationFrame(this.moveRedPacketAnimation);
+        this.disBg = !this.disBg;
       }, 15000);
     },
     initCanvas() {
@@ -198,6 +223,39 @@ export default {
   width: 100%;
   height: 100%;
 }
+.wrap_bg{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  color: #ffffff;
+  text-align: center;
+  line-height: 100%;
+}
+.wrap_bg .text {
+  position: absolute;
+  text-align: center;
+  top: 40%;
+  font-size: 140px;
+  width: 100%;
+  animation: scaleSize 1s linear infinite;
+}
+@keyframes scaleSize {
+  0%{
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.wrap_bg button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+} 
 .canvasWrap {
   width: 100%;
   height: 100%;
