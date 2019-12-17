@@ -21,6 +21,7 @@ export default {
       innerHeight: "",
       innerWidth: "",
       timer: null,
+      canvas: "",
       imgArr: [
         {
           img:
@@ -45,8 +46,7 @@ export default {
   },
   mounted() {
     this.initCanvas();
-    this.innerHeight = this.$refs.canvasArea.offsetHeight;
-    this.innerWidth = this.$refs.canvasArea.offsetWidth;
+    this.resizeCanvas();
     this.$nextTick().then(() => {
       let that = this;
       window.onresize = function() {
@@ -69,9 +69,9 @@ export default {
       }, 15000);
     },
     initCanvas() {
-      const canvas = document.getElementById("canvas");
-      if (canvas.getContext) {
-        this.ctx = canvas.getContext("2d");
+      this.canvas = document.getElementById("canvas");
+      if (this.canvas.getContext) {
+        this.ctx = this.canvas.getContext("2d");
         this.loadImgs(this.imgArr);
       }
     },
