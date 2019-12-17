@@ -3,6 +3,7 @@
     <div class="score">{{ clickedRedPacket }},剩余{{ endCount }}s</div>
     <div class="canvasWrap" ref="canvasArea">
       <canvas id="canvas" @click="clickHandler"></canvas>
+      <img id='canvas_bg' src="../assets/bj.jpg" alt="">
     </div>
     <button class="startGameBtn" @click="startRain">startGame</button>
   </div>
@@ -82,8 +83,11 @@ export default {
       }
     },
     resizeCanvas() {
-      this.innerHeight = this.$refs.canvasArea.offsetHeight;
-      this.innerWidth = this.$refs.canvasArea.offsetWidth;
+      this.innerHeight = window.screen.height;
+      this.innerWidth = window.screen.width;
+      let image = document.querySelector('#canvas_bg');
+      image.height = this.innerHeight;
+      image.width = this.innerWidth;
       document.getElementById("canvas").setAttribute("width", this.innerWidth);
       document
         .getElementById("canvas")
@@ -125,7 +129,7 @@ export default {
           y: -Math.random() * 150, // -150内高度 随机
           radius: randomRound(this.innerWidth * 0.05, this.innerWidth * 0.1), // 红包宽度
           img: this.imgArr[randomRound(0, this.imgArr.length - 1)].img, // 随机取一个红包图片对象
-          speed: randomRound(this.innerHeight * 0.01, this.innerHeight * 0.02)
+          speed: randomRound(this.innerHeight * 0.0075, this.innerHeight * 0.0125)
         };
         // console.log(newRedPacket);
         arr.push(newRedPacket);
@@ -197,8 +201,27 @@ export default {
   width: 100%;
   height: 100%;
 }
+.canvasWrap img {
+  position: absolute;
+  top: 0;
+  left:0;
+}
 #canvas {
-  width: 100%;
-  height: 500px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+}
+.startGameBtn {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  z-index: 10;
+}
+.score {
+  position: fixed;
+  left: 10px;
+  top: 0;
+  z-index: 10;
 }
 </style>
