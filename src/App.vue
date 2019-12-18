@@ -4,14 +4,12 @@
       <div v-if="!start" class="text">{{ timerNum }}</div>
       <button v-if="start" @click="startGame">开始游戏</button>
     </div>
-
     <div class="score">{{ clickedCount }},剩余{{ endCount }}s</div>
     <div class="canvasWrap" ref="canvasArea">
       <canvas class="canvas" id="canvas" @click="clickHandler"></canvas>
       <canvas class="canvas bubbleCanvas" id="bubbleCanvas"></canvas>
       <img id="canvas_bg" src="../assets/bj.jpg" alt="" />
     </div>
-    <!-- <button class="startGameBtn" @click="startRain">startGame</button> -->
   </div>
 </template>
 <script>
