@@ -1,19 +1,24 @@
 <template>
-  <div class="wrap">
-    <div v-if="disBg" class="wrap_bg">
-      <div v-if="!start" class="text">{{ timerNum }}</div>
-      <button v-if="start" @click="startGame">开始游戏</button>
+  <div>
+    <div class="wrap" v-show="!lottoryFlag">
+      <div v-if="disBg" class="wrap_bg">
+        <div v-if="!start" class="text">{{ timerNum }}</div>
+        <button v-if="start" @click="startGame">开始游戏</button>
+      </div>
+      <div class="score">{{ clickedCount }},剩余{{ endCount }}s</div>
+      <div class="canvasWrap" ref="canvasArea">
+        <canvas class="canvas" id="canvas" @click="clickHandler"></canvas>
+        <canvas class="canvas bubbleCanvas" id="bubbleCanvas"></canvas>
+        <img id="canvas_bg" src="../assets/bj.jpg" alt="" />
+      </div>
     </div>
-    <div class="score">{{ clickedCount }},剩余{{ endCount }}s</div>
-    <div class="canvasWrap" ref="canvasArea">
-      <canvas class="canvas" id="canvas" @click="clickHandler"></canvas>
-      <canvas class="canvas bubbleCanvas" id="bubbleCanvas"></canvas>
-      <img id="canvas_bg" src="../assets/bj.jpg" alt="" />
-    </div>
+    <Lottory class="lottory" v-show="lottoryFlag"></Lottory>
   </div>
 </template>
 <script>
 import { randomRound, isValidClick } from "../util/util";
+import Lottory from "./components/lottory";
+
 // const redPacket = {
 //   x: "x轴位置",
 //   y: "y轴位置",
@@ -35,6 +40,7 @@ export default {
       disBg: true,
       timerNum: 5,
       bubbleArr: [],
+      lottoryFlag: false,
       imgArr: [
         {
           img:
@@ -64,6 +70,9 @@ export default {
       redPacketArr: []
     };
   },
+  components: {
+    Lottory
+  },
   mounted() {
     this.initCanvas();
   },
@@ -86,6 +95,7 @@ export default {
         this.timerNum = 5;
         this.disBg = !this.disBg;
         this.start = !this.start;
+        this.initCanvas();
         this.startRain();
       }, 6000);
     },
@@ -103,7 +113,8 @@ export default {
         window.cancelAnimationFrame(this.moveRedPacketAnimation);
         window.cancelAnimationFrame(this.moveBubbleAnimation);
         this.disBg = !this.disBg;
-      }, 15000);
+        this.checkLottoryStatus();
+      }, 16000);
     },
     initCanvas() {
       this.canvas = document.getElementById("canvas");
@@ -280,6 +291,17 @@ export default {
       });
       this.drawBubble();
       this.moveBubbleAnimation = window.requestAnimationFrame(this.moveBubble);
+    },
+    checkLottoryStatus() {
+      if (this.clickedCount >= 8) {
+        this.lottoryFlag = true;
+      } else {
+        this.clickedCount = 0;
+        this.endCount = 15;
+        window.alert("游戏结束!");
+        this.ctx.clearRect(0, 0, this.innerWidth, this.innerHeight);
+        this.bubbleCtx.clearRect(0, 0, this.innerWidth, this.innerHeight);
+      }
     }
   }
 };
