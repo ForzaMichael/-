@@ -71,6 +71,11 @@ export default {
   },
   methods: {
     startGame() {
+      this.$post("/lottery", {
+        activityId: 2019090901,
+        channelName: "APP",
+        phone: "19837107475"
+      });
       this.start = !this.start;
       this.startTimer = setInterval(() => {
         this.timerNum--;
