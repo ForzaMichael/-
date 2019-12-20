@@ -23,7 +23,7 @@
     </div>
     <Lottery
       @restartFromLottery="restartRainGame"
-      class="lottory"
+      class="lottery"
       v-if="lotteryFlag"
       :phone="phone"
     ></Lottery>
@@ -91,7 +91,7 @@ export default {
   },
   mounted() {
     this.initCanvas();
-    this.addLotteryCount();
+    // this.addLotteryCount();
   },
   methods: {
     startGame() {
@@ -108,7 +108,7 @@ export default {
         this.timerNum = 5;
         this.disBg = !this.disBg;
         this.start = !this.start;
-        this.initCanvas();
+        // this.initCanvas();
         this.startRain();
       }, 6000);
     },
@@ -124,12 +124,12 @@ export default {
         this.clearTimerAndAnimation();
         alert("游戏结束！");
         this.disBg = !this.disBg;
-        if (this.clickedCount >= 1) {
+        if (this.clickedCount >= 8) {
           this.LotteryButtonFlag = true;
           this.addLotteryCount();
         }
         this.clearData();
-      }, 3000);
+      }, 16000);
     },
     initCanvas() {
       this.canvas = document.getElementById("canvas");
@@ -143,8 +143,9 @@ export default {
       this.resizeCanvas();
     },
     resizeCanvas() {
-      this.innerHeight = window.screen.height;
-      this.innerWidth = window.screen.width;
+      this.innerWidth = window.innerWidth;
+      this.innerHeight = window.innerHeight;
+      console.log(this.innerHeight, this.innerWidth);
       let image = document.querySelector("#canvas_bg");
       image.height = this.innerHeight;
       image.width = this.innerWidth;
@@ -304,7 +305,7 @@ export default {
       this.drawBubble();
       this.moveBubbleAnimation = window.requestAnimationFrame(this.moveBubble);
     },
-    // checkLottoryStatus() {
+    // checkeStatus() {
     //   //刷新canvas状态
     //   this.clickedCount = 0;
     //   this.endCount = 15;
@@ -387,6 +388,8 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
 }
 .canvas {
   position: absolute;
@@ -415,6 +418,9 @@ export default {
   align-items: center;
   justify-content: space-around;
 }
+/* .lottery{
+  height: 100%
+} */
 .el-loading-spinner .path {
   stroke: #ed4014 !important;
 }

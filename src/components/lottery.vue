@@ -69,23 +69,28 @@ export default {
       remainingOpportunityCount: 0,
       prizeList: [
         {
-          icon: "https://picsum.photos/40?random=1",
+          icon:
+            "http://pic.90sjimg.com/element_origin_pic/17/07/19/410aa41ec4894ee653bd86e1982e7cf8.png",
           name: "100元话费券"
         },
         {
-          icon: "https://picsum.photos/40?random=1",
+          icon:
+            "https://bpic.588ku.com/element_origin_min_pic/19/07/23/0e2929d0c7dbb24041c81e953cc7a8d5.jpg",
           name: "50元流量券"
         },
         {
-          icon: "https://picsum.photos/40?random=6",
+          icon:
+            "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1576838234330&di=4c6f743579a322d0549592c349ae9192&imgtype=0&src=http%3A%2F%2Farticle-fd.zol-img.com.cn%2Ft_s500x2000%2Fg5%2FM00%2F0E%2F02%2FChMkJ13fk6eIM1pYAABAAhW5qLoAAveAAIm_yQAAEAa147.jpg",
           name: "iphone 11"
         },
         {
-          icon: "https://picsum.photos/40?random=2",
+          icon:
+            "https://bpic.588ku.com//element_pic/19/07/08/c48f7272982ef32c72bdbde22ac25d54.jpg",
           name: "200元电商优惠券"
         },
         {
-          icon: "https://picsum.photos/40?random=6",
+          icon:
+            "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1576834053518&di=3c8cd16a26edea6d8697627b2d6e5e25&imgtype=0&src=http%3A%2F%2Fku.90sjimg.com%2Felement_origin_min_pic%2F17%2F07%2F08%2Ff77f15c74e1ee1a6961365c9a4b03369.jpg%2521%2Ffwfh%2F804x804%2Fquality%2F90%2Funsharp%2Ftrue%2Fcompress%2Ftrue",
           name: "Thank you!"
         }
       ]
@@ -252,7 +257,11 @@ export default {
   transform-origin: bottom;
 }
 .prize-item .prize-name {
-  padding: 16px 0;
+  padding: 14px 0 8px;
+}
+.prize-icon img {
+  width: 50px;
+  height: 50px;
 }
 .upArrow {
   /*箭头占位符，规定宽高等*/
@@ -283,7 +292,7 @@ export default {
 }
 .upArrow:after {
   /*伪元素after绘制箭头的头部三角形*/
-  /* left: 3px; */
+  left: 1px;
   top: -5%;
   border-width: 7px;
   border-bottom-color: #555; /*如果绘制向下三角形的话，用border-top-color:#555;*/
