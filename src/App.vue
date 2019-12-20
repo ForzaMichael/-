@@ -1,9 +1,18 @@
 <template>
   <div>
-    <div class="wrap" v-show="!lottoryFlag">
+    <div class="wrap" v-show="!lotteryFlag">
       <div v-if="disBg" class="wrap_bg">
         <div v-if="!start" class="text">{{ timerNum }}</div>
-        <button v-if="start" @click="startGame">开始游戏</button>
+        <button v-if="start" @click="startGame" class="button startGame">
+          开始游戏
+        </button>
+        <button
+          v-if="LotteryButtonFlag"
+          @click="lotteryFlag = true"
+          class="button"
+        >
+          去抽奖
+        </button>
       </div>
       <div class="score">{{ clickedCount }},剩余{{ endCount }}s</div>
       <div class="canvasWrap" ref="canvasArea">
@@ -12,12 +21,17 @@
         <img id="canvas_bg" src="../assets/bj.jpg" alt="" />
       </div>
     </div>
-    <Lottory class="lottory" v-show="lottoryFlag"></Lottory>
+    <Lottery
+      @restartFromLottery="restartRainGame"
+      class="lottory"
+      v-if="lotteryFlag"
+      :phone="phone"
+    ></Lottery>
   </div>
 </template>
 <script>
 import { randomRound, isValidClick } from "../util/util";
-import Lottory from "./components/lottory";
+import Lottery from "./components/lottery";
 
 // const redPacket = {
 //   x: "x轴位置",
@@ -40,7 +54,12 @@ export default {
       disBg: true,
       timerNum: 5,
       bubbleArr: [],
-      lottoryFlag: false,
+      lotteryFlag: false,
+      phone: "13530424394",
+      LotteryButtonFlag: false,
+      ctx: "",
+      bubbleCtx: "",
+      redPacketArr: [],
       imgArr: [
         {
           img:
@@ -48,7 +67,7 @@ export default {
         },
         {
           img:
-            "https://hbimg.huabanimg.com/04ab13e4b937fc871370ac49662cc562902600de5eab5-XIxPDN_fw658"
+            "http://pic.90sjimg.com/original_origin_pic/18/09/18/8fe63a446fb8766a5cce14ebbbbe4952.png!/fwfh/804x1201/quality/90/unsharp/true/compress/true/watermark/url/LzkwX3dhdGVyX3Y2LnBuZw==/repeat/true"
         },
         {
           img:
@@ -62,28 +81,22 @@ export default {
       bubbleImage: [
         {
           img:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvPIpjkiRHJkwI7Laeyg9ZWnWm2MwV_jlgSGJWEkd7DIEZ18fZ&s"
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAflBMVEX/Pj7/////MzP/LS3/oKD/ysr/PDz/OTn/Njb/MDD/JSX/KSn/5ub/4+P/iYn/x8f/m5v/q6v/tbX/YmL/dHT/urr/7u7/hYX/R0f/6+v/2Nj/Wlr/9/f/UVH/rq7/eHj/HR3/aWn/v7//ERH/TEz/l5f/0tL/Q0P/d3f/gIDqnPQqAAAJsElEQVR4nO2d63ayOhCGAylJSDyfsFYrVr+6e/83uKFW5ZAAykyCtu9Pu1bxkclhJpMZ4mFrvfbm4/H4fcvJVXz7nnw2T/+ILYL4vxf9XjSYxVKGfqIsYIKYfhRKGc8GUa+/QPwWWITDz6/dUioh8mBlcSGUXO6+PodI3wSDcDWZHhUVnNXAXcW4oOo4nawQvg004eJjxGV4A1wWM5R89AFtsaCEi2BLqX8P3YXSp3QbgEICEg53RyXa4P1ACnXcAQ5KKML+TNG7bFMLyama9YG+GQjh63wpAd5eDlLI5fwV4ssBEPYGKoTF+4EM1aDXAcJF5LeaWyoZfT9qPeu0JBxGMbB5FhhFHLWcdVoRvk6lQMQ7Schpq/HYgvB1ENZtyWDEw0ELxrsJFxFFtc+smKD3j8d7CedHtPlFy+gf51YJ+xtlk++bUW3u2wPcRTijdgZgXpzOLBGu9tYGYF5M7O9wr24mXEexE7yT4ujmsMethAH3HQIS4vMAl3AUuzHQq1g8QiRck9AxX6qQ3GSptxBODi6m0LL4YYJDOJGuLfQsJm9AbE74huIE3icWvsETbvC9iFskNsCEw44BpogN/cZmhIHqxhyTFVfNVsZGhMG+O0PwKrZvhNiEMIhdwxgUN0FsQBhY95SaijUx1HrCl84CpqtGvUNVS/jSmXVepwaIdYTdNdGTWFhnqDWEXQdsMBarCQPnzlK9WM2MWkkY7F1//UaqXherCIedN9GTmKrawFURbrq3VdOLV23DKwg7t9k2q8rTMBO+PQ5ggmj2F42Eky6EZJorNHr9JsLuhCyayRzYMBCuD48FmCAeDBE4AyF5lGn0Km5C0X46eqxBeFKoDxVrCdFcXuafhWEj+u2bjnANlvpTEOOjl5PGOwRExnVDUUcYYR2+ZOzoBeMZftSMcBUjPDwVzyzLKIQk1pwvagixHArGM9kGOIRk34RwhrRbY2HWA0AiFOWgRomwT5GmGfov+xgkQkZL6QwlQiyXSexyj0Ei1DhSRcK5QnryMj+TYxESVcy7KRAujjg2yljBetAI2bGQPVUgRFoKGf0s/LJohKVFMU/4ijPNsJLpIBIymk/zyxMOcFYKNS4CIhISMTATvuIcZFPNph+RkIW5l5gjnKKsFDT/m6ITEj41EQ4lxvO0gKiERGZ3T1nCJYaNUt1+H5mQLfWEC4xXqPSAuIREZtbEDGEEP5Gy/GbUGqHI/K5Xwh58WjPTzaI2CJl/vYpyJRyAP5PRdxMgMiHxr9PbhfAV/KCp8kgImZCpy5p4IZxDBxAFq0pZRiYk4WWfeCGEXir8t8pbINiE1wXjTNgHXirUV3WaKzYhkWd37UwIG51hsrzXtkx4idicCUHnGbGszVVCJ2QqTzikgP+czspDcFGYdtAJCR3mCAGD7Ey+aN7ZW2HlwCfkuywhYHjGP2gWifVSFuwWn/AcsDkRBmARNjHQzKH9A6fWCclPstSJcAs2k1LNKvh55MQBodheCRdwAShavn39kcZGHBAyurgQfsDNpGXC0XfOgwNCQj8uhCO4xxUJ1/+dfj0XhP7oQgh45lsg7G9+SFwQMn4mXAHuSfOE88stBheERK5+CCHTn7KE66/rXtAJ4XeiVEoIGSbNEK4OGQonhN+B05QQ8rzpSviSyyhxQsiOJ8Ih5JHhmbBfuOrmhJCkcZSE8BPUrzgRjosXpdwQpod6CeEXpPP7Tbialo543BCKr29C0PSklPCfpiCBG8LUgyLeAjQGRXvBUXdG54aQLRcJIWwMihku07ohTONRxOvBZl8YDMIRoeolhAgHMho5IhRRQoh0dl+QK8JBQjizkvDsiJDPPLKOrTzKESGJ12SNcnhfkitCuSbekxN6BPxUTS9XhOGcjO08yhWhP/4jhJJDwvcnJ3wnWzs3nFwR8q2tK1yuCO1dUXNGaE1/hI+vP8LH1x/h4+uP8PH1R4io59+XPr9v8fz+4fP7+H+EQHJI+Pzx0uePeT//ucXznz09//nhLzgDfv5zfOBcDINc5mJA3+nSy2U+DWxOlEkuc6Jg89pMcpnXBpubaJLT3ETQ/FKTnOaXguYIG5/lMkcYNM/bJKd53kglTfJym6tvo9ys2/sWkHdmTHJ7Zwby3pNJbu89Qd5dM8nx3TXA+4cmOb5/CHiH1Pg0t3dIAe8Bm+T4HjDgXW6TXN/lxiqXeJV9wvx9fHwPyj5hvqYCbF0MnewTFupiwNY20T3PNmGxtgla9eCzrBOW6tNgx6OsE5ZqDOGUFLzKNmG5ThR8ra+8bBNqan3B12vLyTKhrl4bQs29rCwT6mruYdRNzMguob5uIu4RjV1Cfe1LnPqlZ9klNNQvRV0wrBKaatAi1RE+ySqhsY4wZuDUJqG5FjRWPe9UFgmr6nkjnulbJKyqyY5VV5/YJKyuq4/XJsgeYXVvBLyAjTXCuv4WaD1KrBHW9ShB6zNji7C+zwxWryBLhE16BSFFbCwRNun3hNSzyxJho55dOH3XqJUquw37rqEsiowsczLVImqlpr3zcPofsoLgn3BD/0O8Hpa4at7D8hf0If0FvWR/QT/g5+/p/Av6cv+C3uqJl/E4iKLkUTQiRGvYCa6yy9SQcIh99A2kyqZElYRegNUaGFb7yo4olYTJ9q37b5HpN2sNCb2g84bKVE1PmxpCL8ALg4OIhXVNe+oIvVmnEVlYDlvcSthpxAaADQg7PBZrx2BDwu46xDWzaHPCZF3s4ltk1evgTYSJoXZvA8ebmGhjQm/YuW242FRt1W4n7JynUeVN3EnoGcrJOxELzf7g/YQdCmyYQxbtCL3JoRvzDT/cAHgTobcmXQjehKS6AWgbQs8bOXenWGzsogxC6AXcbaE1nzdbBe8n9NZR7BAwjm6y0LsIPW+1F25MlYl9VRNlOMLEodK0ysEXp/WuEhSh199Y96iY2pSSEBAJPW9+RE2aLvH5x2KeDDaht4ioteHIBI0W9V8JmNDzXgehneHIw0FlF3M0woRxKvE9DianLfhaEiZ+YxSj2ioTctnQD0QiTMejjzbnMN+/f/yBEXpeb6BQXEcWqkG5u7ALwmQ8zpcS2FhT85y3Gn9ngRAm6s8UBUs0Ypyq2X3re1lQhImGu6MCeJNMqOOu5eySFSBhMusEW0pbzTvMp3QbtJ5dsgIlTLT4GHEZ3mWvjIeSjz5A8Tx4wlSryfSoqLgBk3FB1XE6ucM5qhUGYarh59duKZUQdRs7LoSSy93XJ+DQywmLMNWi34sGs1jK0E+UR+XpR6GU8WwQ9frQlpkVJuFJ67U3H4/H77nS6Hz7nnw2T/+Irf8BNcGLtXsMEXQAAAAASUVORK5CYII="
         }
-      ],
-      ctx: "",
-      bubbleCtx: "",
-      redPacketArr: []
+      ]
     };
   },
   components: {
-    Lottory
+    Lottery
   },
   mounted() {
     this.initCanvas();
+    this.addLotteryCount();
   },
   methods: {
     startGame() {
-      this.$post("/lottery", {
-        activityId: 2019090901,
-        channelName: "APP",
-        phone: "19837107475"
-      });
       this.start = !this.start;
+      this.LotteryButtonFlag = false;
       this.startTimer = setInterval(() => {
         this.timerNum--;
         if (this.timerNum === 0) {
@@ -108,13 +121,15 @@ export default {
       }, 1000);
       // //倒计时15s后，停止动画
       this.runCountdownTimer = setTimeout(() => {
-        clearTimeout(this.endCountTimer);
-        clearTimeout(this.addredPacketsTimer);
-        window.cancelAnimationFrame(this.moveRedPacketAnimation);
-        window.cancelAnimationFrame(this.moveBubbleAnimation);
+        this.clearTimerAndAnimation();
+        alert("游戏结束！");
         this.disBg = !this.disBg;
-        this.checkLottoryStatus();
-      }, 16000);
+        if (this.clickedCount >= 1) {
+          this.LotteryButtonFlag = true;
+          this.addLotteryCount();
+        }
+        this.clearData();
+      }, 3000);
     },
     initCanvas() {
       this.canvas = document.getElementById("canvas");
@@ -181,10 +196,7 @@ export default {
           y: -Math.random() * 150, // -150内高度 随机
           radius: randomRound(this.innerWidth * 0.05, this.innerWidth * 0.1), // 红包宽度
           img: this.imgArr[randomRound(0, this.imgArr.length - 1)].img, // 随机取一个红包图片对象
-          speed: randomRound(
-            this.innerHeight * 0.0075,
-            this.innerHeight * 0.0125
-          )
+          speed: randomRound(this.innerHeight * 0.006, this.innerHeight * 0.008)
         };
         // console.log(newRedPacket);
         arr.push(newRedPacket);
@@ -292,16 +304,39 @@ export default {
       this.drawBubble();
       this.moveBubbleAnimation = window.requestAnimationFrame(this.moveBubble);
     },
-    checkLottoryStatus() {
-      if (this.clickedCount >= 8) {
-        this.lottoryFlag = true;
-      } else {
-        this.clickedCount = 0;
-        this.endCount = 15;
-        window.alert("游戏结束!");
-        this.ctx.clearRect(0, 0, this.innerWidth, this.innerHeight);
-        this.bubbleCtx.clearRect(0, 0, this.innerWidth, this.innerHeight);
-      }
+    // checkLottoryStatus() {
+    //   //刷新canvas状态
+    //   this.clickedCount = 0;
+    //   this.endCount = 15;
+    //   this.ctx.clearRect(0, 0, this.innerWidth, this.innerHeight);
+    //   this.bubbleCtx.clearRect(0, 0, this.innerWidth, this.innerHeight);
+    //   window.alert("游戏结束!");
+    // },
+    //抽奖数据及页面
+    addLotteryCount() {
+      this.$post("/addOpportunity", {
+        activityId: 2019121901,
+        channelName: "APP",
+        opportunityQuantity: 1,
+        phone: this.phone
+      });
+    },
+    clearTimerAndAnimation() {
+      clearTimeout(this.endCountTimer);
+      clearTimeout(this.addredPacketsTimer);
+      window.cancelAnimationFrame(this.moveRedPacketAnimation);
+      window.cancelAnimationFrame(this.moveBubbleAnimation);
+    },
+    clearData() {
+      this.canvas = "";
+      this.bubbleCanvas = "";
+      this.redPacketArr = [];
+      this.endCount = 15;
+      this.clickedCount = 0;
+    },
+    restartRainGame() {
+      this.clearData();
+      this.lotteryFlag = false;
     }
   }
 };
@@ -339,11 +374,11 @@ export default {
     transform: scale(1);
   }
 }
-.wrap_bg button {
+/* .wrap_bg button {
   position: absolute;
-  top: 50%;
+  top: 40%;
   left: 50%;
-}
+} */
 .canvasWrap {
   width: 100%;
   height: 100%;
@@ -374,5 +409,16 @@ export default {
   left: 10px;
   top: 0;
   z-index: 10;
+}
+.wrap_bg {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.el-loading-spinner .path {
+  stroke: #ed4014 !important;
+}
+.el-loading-spinner .el-loading-text {
+  color: #ed4014 !important;
 }
 </style>
